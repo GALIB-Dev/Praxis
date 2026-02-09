@@ -28,15 +28,20 @@ export function Header() {
 
           <div className="hidden lg:flex items-center gap-8">
             <Link href="/" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
-              Home
+              শুরু
             </Link>
-            <a href="#how" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
-              How It Works
-            </a>
             {user.id && user.role === "worker" && (
-              <Link href="/upload" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
-                Upload
-              </Link>
+              <>
+                <Link href="/record" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
+                  ভিডিও রেকর্ড
+                </Link>
+                <Link href="/skill-wallet" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
+                  স্কিল ওয়ালেট
+                </Link>
+                <Link href="/job-match" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
+                  চাকরির মিল
+                </Link>
+              </>
             )}
             {user.id && user.role === "employer" && (
               <Link href="/employer/candidates" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
@@ -51,7 +56,7 @@ export function Header() {
             <div className="relative">
               <input
                 aria-label="Search"
-                placeholder="Search jobs or skills"
+                placeholder="চাকরি বা স্কিল সার্চ করুন"
                 className="hidden md:block w-56 bg-light border border-gray-200 rounded-md py-2 px-3 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
               />
             </div>
@@ -61,11 +66,11 @@ export function Header() {
             {!user.id ? (
               <>
                 <Link href="/login" className="text-gray-700 hover:text-black font-medium transition-colors duration-200">
-                  Login
+                  লগইন
                 </Link>
                 <Link href="/signup" className="inline-block">
                   <Button variant="primary" size="md" className="bg-bengalRed border-bengalRed hover:bg-bengalRed/90">
-                    Sign Up
+                    সাইন আপ
                   </Button>
                 </Link>
               </>
@@ -86,11 +91,11 @@ export function Header() {
                   <div className="absolute right-6 top-16 bg-white rounded-md border border-gray-300 shadow-lg p-3 w-48">
                     <div className="flex flex-col gap-2">
                       {user.role === "worker" ? (
-                        <Link href="/dashboard" className="text-gray-700 hover:text-black py-1">Dashboard</Link>
+                        <Link href="/skill-wallet" className="text-gray-700 hover:text-black py-1">স্কিল ওয়ালেট</Link>
                       ) : (
                         <Link href="/employer/candidates" className="text-gray-700 hover:text-black py-1">Candidates</Link>
                       )}
-                      <button onClick={handleLogout} className="text-left text-gray-700 hover:text-black py-1">Logout</button>
+                      <button onClick={handleLogout} className="text-left text-gray-700 hover:text-black py-1">লগআউট</button>
                     </div>
                   </div>
                 )}
@@ -124,19 +129,19 @@ export function Header() {
         {isMenuOpen && (
           <div className="absolute top-16 right-4 bg-white rounded-md border border-gray-300 shadow-lg md:hidden transition-all duration-300 ease-smooth w-56">
             <div className="flex flex-col gap-1 p-4">
-              <Link href="/" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">Home</Link>
-              <a href="#how" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">How It Works</a>
+              <Link href="/" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">শুরু</Link>
               {!user.id ? (
                 <>
-                  <Link href="/login" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">Login</Link>
-                  <Link href="/signup" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">Sign Up</Link>
+                  <Link href="/login" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">লগইন</Link>
+                  <Link href="/signup" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">সাইন আপ</Link>
                 </>
               ) : (
                 <>
                   {user.role === "worker" ? (
                     <>
-                      <Link href="/upload" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">Upload</Link>
-                      <Link href="/dashboard" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">Dashboard</Link>
+                      <Link href="/record" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">ভিডিও রেকর্ড</Link>
+                      <Link href="/skill-wallet" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">স্কিল ওয়ালেট</Link>
+                      <Link href="/job-match" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">চাকরির মিল</Link>
                     </>
                   ) : (
                     <>
@@ -144,7 +149,7 @@ export function Header() {
                       <Link href="/employer/jobs" className="text-gray-700 hover:text-black py-2 font-medium transition-colors duration-200">My Jobs</Link>
                     </>
                   )}
-                  <button onClick={handleLogout} className="text-gray-900 hover:text-black py-2 text-left font-medium transition-colors duration-200">Logout</button>
+                  <button onClick={handleLogout} className="text-gray-900 hover:text-black py-2 text-left font-medium transition-colors duration-200">লগআউট</button>
                 </>
               )}
             </div>

@@ -20,6 +20,7 @@ export interface JobMatch {
   description: string;
   requiredSkills: string[];
   matchPercentage: number;
+  salaryRange?: string;
 }
 
 export interface UserProfile {
