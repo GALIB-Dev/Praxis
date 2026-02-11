@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const ADMIN_PHONE = "01785904899";
 
@@ -88,11 +89,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9F4] overflow-hidden relative">
+    <div className="min-h-screen bg-[#F7F9F4] dark:bg-gray-900 overflow-hidden relative">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#A3B18A]/10 rounded-full blur-3xl animate-pulse" style={{ animation: "float 6s ease-in-out infinite" }} />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#3A7D44]/5 rounded-full blur-3xl animate-pulse" style={{ animation: "float 8s ease-in-out infinite 1s" }} />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#A3B18A]/10 dark:bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animation: "float 6s ease-in-out infinite" }} />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#3A7D44]/5 dark:bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animation: "float 8s ease-in-out infinite 1s" }} />
       </div>
 
       {/* Grid background pattern */}
@@ -103,6 +104,11 @@ export default function LoginPage() {
 
       {/* Content */}
       <div className="relative flex items-center justify-center min-h-screen px-4 py-4">
+        {/* ThemeToggle in top-right corner */}
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
+        
         <div className="w-full max-w-4xl">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Section - Form */}
@@ -112,8 +118,8 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
               <Icon name="business-svgrepo-com" size={40} color="#3A7D44" />
             </div>
-            <h1 className="text-2xl font-bold text-green mb-1">Praxis</h1>
-            <p className="text-sm text-[#344E41]/8000">Verify your skills, land your future</p>
+            <h1 className="text-2xl font-bold text-green dark:text-gray-100 mb-1">Praxis</h1>
+            <p className="text-sm text-[#344E41]/8000 dark:text-gray-300">Verify your skills, land your future</p>
           </div>
 
           {/* Error Alert */}
@@ -125,13 +131,13 @@ export default function LoginPage() {
           )}
 
           {/* Auth Method Tabs */}
-          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-white/30 rounded-lg backdrop-blur-sm border border-[#A3B18A]00/50">
+          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-white/30 dark:bg-gray-800/30 rounded-lg backdrop-blur-sm border border-[#A3B18A]00/50 dark:border-gray-700">
             <button
               onClick={() => setAuthMethod("phone")}
               className={`py-1 px-2 rounded-md font-semibold text-xs transition-all duration-200 ${
                 authMethod === "phone"
-                  ? "bg-[#A3B18A]/10 text-[#3A7D44]00 border border-[#A3B18A]00/50"
-                  : "text-[#344E41]/6000 hover:text-[#344E41]/8000"
+                  ? "bg-[#A3B18A]/10 dark:bg-gray-700 text-[#3A7D44]00 dark:text-gray-100 border border-[#A3B18A]00/50 dark:border-gray-600"
+                  : "text-[#344E41]/6000 dark:text-gray-400 hover:text-[#344E41]/8000 dark:hover:text-gray-200"
               }`}
             >
               Phone
@@ -140,8 +146,8 @@ export default function LoginPage() {
               onClick={() => setAuthMethod("google")}
               className={`py-2 px-3 rounded-md font-semibold text-sm transition-all duration-200 ${
                 authMethod === "google"
-                  ? "bg-[#A3B18A]/10 text-[#3A7D44]00 border border-[#A3B18A]00/50"
-                  : "text-[#344E41]/6000 hover:text-[#344E41]/8000"
+                  ? "bg-[#A3B18A]/10 dark:bg-gray-700 text-[#3A7D44]00 dark:text-gray-100 border border-[#A3B18A]00/50 dark:border-gray-600"
+                  : "text-[#344E41]/6000 dark:text-gray-400 hover:text-[#344E41]/8000 dark:hover:text-gray-200"
               }`}
             >
               Google
@@ -152,7 +158,7 @@ export default function LoginPage() {
           {authMethod === "phone" && (
             <form onSubmit={handlePhoneLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-green-500 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-semibold text-green-500 dark:text-gray-200 mb-2 flex items-center gap-2">
                   <Icon name="user-svgrepo-com" size={18} color="#217d2f" />
                   Phone Number
                 </label>
@@ -164,11 +170,11 @@ export default function LoginPage() {
                     onChange={handlePhoneChange}
                     disabled={loading}
                     autoFocus
-                    className="w-full px-4 py-3 pl-10 bg-green-500/50 border border-[#A3B18A]00/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-[#A3B18A]00 focus:ring-1 focus:ring-blue-400/50 transition-all disabled:opacity-50"
+                    className="w-full px-4 py-3 pl-10 bg-green-500/50 dark:bg-gray-800/50 border border-[#A3B18A]00/50 dark:border-gray-700 rounded-lg text-white dark:text-gray-100 placeholder-slate-500 dark:placeholder-gray-400 focus:outline-none focus:border-[#A3B18A]00 dark:focus:border-gray-600 focus:ring-1 focus:ring-blue-400/50 transition-all disabled:opacity-50"
                   />
                   <Icon name="mail-svgrepo-com" size={18} color="#94A3B8" className="absolute left-3 top-3.5" />
                 </div>
-                <p className="text-xs text-[#344E41]/6000 mt-2">
+                <p className="text-xs text-[#344E41]/6000 dark:text-gray-400 mt-2">
                   ✓ Enter your 11-digit phone number (01XXXXXXXXX)
                 </p>
               </div>
@@ -199,14 +205,14 @@ export default function LoginPage() {
           {/* Google Login */}
           {authMethod === "google" && (
             <div className="space-y-6">
-              <p className="text-sm text-[#344E41]/8000 text-center">
+              <p className="text-sm text-[#344E41]/8000 dark:text-gray-300 text-center">
                 Sign in with your Google account to get started
               </p>
 
               <button
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full bg-white/50 hover:bg-slate-700/50 disabled:bg-slate-700/30 border-2 border-[#A3B18A]00/50 hover:border-[#A3B18A]00 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3"
+                className="w-full bg-white/50 dark:bg-gray-800/50 hover:bg-slate-700/50 dark:hover:bg-gray-700/50 disabled:bg-slate-700/30 dark:disabled:bg-gray-800/30 border-2 border-[#A3B18A]00/50 dark:border-gray-700 hover:border-[#A3B18A]00 dark:hover:border-gray-600 text-white dark:text-gray-100 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3"
               >
                 {loading ? (
                   <>
@@ -234,25 +240,55 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#A3B18A]00/50" />
+              <div className="w-full border-t border-[#A3B18A]00/50 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-[#F7F9F4] text-[#344E41]/6000">or</span>
+              <span className="px-3 bg-[#F7F9F4] dark:bg-gray-900 text-[#344E41]/6000 dark:text-gray-400">or</span>
             </div>
           </div>
 
           {/* Info */}
-          <div className="bg-[#A3B18A]/10 border border-[#A3B18A]00/50 rounded-lg p-4 backdrop-blur-sm">
+          <div className="bg-[#A3B18A]/10 dark:bg-gray-800/50 border border-[#A3B18A]00/50 dark:border-gray-700 rounded-lg p-4 backdrop-blur-sm">
             <div className="flex gap-3 items-start">
               <Icon name="notify-svgrepo-com" size={20} color="#3a7d44" className="flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-[#3A7D44]200">
-                <span className="font-semibold">Demo:</span> Use <code className="bg-[#3A7D44]500/30 px-2 py-1 rounded text-[#3A7D44]100 font-mono text-xs border border-[#A3B18A]00/50">01785904899</code> for admin access
+              <p className="text-sm text-[#3A7D44]200 dark:text-gray-300">
+                <span className="font-semibold">Demo:</span> Use <code className="bg-[#3A7D44]500/30 dark:bg-gray-700 px-2 py-1 rounded text-[#3A7D44]100 dark:text-gray-200 font-mono text-xs border border-[#A3B18A]00/50 dark:border-gray-600">01785904899</code> for admin access
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-5">
+            <div className="bg-white/40 dark:bg-gray-800/40 border border-[#A3B18A]/40 dark:border-gray-700 rounded-2xl p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-[#344E41] dark:text-gray-100">What you unlock after signing in</h2>
+              <p className="text-sm text-[#344E41]/8000 dark:text-gray-300 mt-2 leading-relaxed">
+                The Praxis secure workspace guides you through evidence capture, interview readiness, and opportunity matching. Every interaction is timestamped so you can prove progress when applying to accelerators, training cohorts, or funders.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-[#344E41]/7000">
+                <li className="flex gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#3A7D44]" />
+                  Track each recording attempt with context tags, reviewer feedback, and exportable receipts.
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#3A7D44]" />
+                  Receive AI-generated talking points that translate your lived experience into employer-ready language.
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#3A7D44]" />
+                  Unlock your Praxis Skill Wallet to showcase verified evidence in a single shareable link.
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-[#3A7D44]/10 dark:bg-gray-800/50 border border-[#3A7D44]/30 dark:border-gray-700 rounded-2xl p-5">
+              <h3 className="text-lg font-semibold text-[#344E41] dark:text-gray-100">Our data stewardship pledge</h3>
+              <p className="text-sm text-[#344E41]/8000 dark:text-gray-300 mt-2 leading-relaxed">
+                Login credentials only identify you inside Praxis. Video proofs stay encrypted, every share request creates an audit log, and partners sign accountable use agreements. You remain the owner of your narrative, and you can revoke any employer&rsquo;s access at any time.
               </p>
             </div>
           </div>
 
           {/* Footer */}
-          <p className="text-xs text-[#344E41]/6000 text-center mt-8">
+          <p className="text-xs text-[#344E41]/6000 dark:text-gray-400 text-center mt-8">
             By signing in, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>
@@ -262,7 +298,7 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#3A7D44] to-[#A3B18A]500/20 to-slate-600/20 rounded-3xl blur-3xl" />
           <div className="relative group w-80 h-80">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#3A7D44] to-[#A3B18A]600 to-slate-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-all duration-300 animate-pulse" />
-            <div className="relative bg-white/50 backdrop-blur-xl rounded-2xl p-6 border border-[#A3B18A]00/50 flex items-center justify-center w-full h-full">
+            <div className="relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-[#A3B18A]00/50 dark:border-gray-700 flex items-center justify-center w-full h-full">
               <Icon name="earth-svgrepo-com" size={160} color="#3A7D44" />
             </div>
           </div>
@@ -274,9 +310,9 @@ export default function LoginPage() {
               { icon: "shield-empty-svgrepo-com", text: "Data Protected", color: "#8B5CF6" },
               { icon: "accelerate-svgrepo-com", text: "Fast Access", color: "#F59E0B" }
             ].map((badge, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/30 p-4 rounded-lg border border-[#A3B18A]00/50 hover:border-slate-600/80 transition-all">
+              <div key={i} className="flex items-center gap-3 bg-white/30 dark:bg-gray-800/30 p-4 rounded-lg border border-[#A3B18A]00/50 dark:border-gray-700 hover:border-slate-600/80 dark:hover:border-gray-600 transition-all">
                 <Icon name={badge.icon} size={24} color={badge.color} />
-                <span className="text-white font-semibold text-sm">{badge.text}</span>
+                <span className="text-white dark:text-gray-100 font-semibold text-sm">{badge.text}</span>
               </div>
             ))}
           </div>
