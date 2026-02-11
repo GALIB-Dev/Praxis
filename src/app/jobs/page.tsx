@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 
 export default function JobsPage() {
   const router = useRouter();
-  const [jobs, setJobs] = useState([
+  const [jobs] = useState([
     {
       id: 1,
       title: "Senior Frontend Developer",

@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/Input";
 import { Icon } from "@/components/Icon";
 
 export default function SignupPage() {

@@ -5,10 +5,6 @@ import { useRouter } from "next/navigation";
 import { isUserAdmin, getAdminStatus } from "@/utils/admin";
 import { Icon } from "@/components/Icon";
 
-interface MobileMenuState {
-  isOpen: boolean;
-}
-
 export default function AdminPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -17,7 +13,7 @@ export default function AdminPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalUsers: 1250,
     activeToday: 342,
     videoProcessed: 4567,

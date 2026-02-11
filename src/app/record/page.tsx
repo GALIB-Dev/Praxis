@@ -2,11 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
-import { Alert } from "@/components/ui/Alert";
 import { Icon } from "@/components/Icon";
-import { BANGLA_TEXT } from "@/constants/bangla";
-import { formatDuration, validateVideoBlob, compressVideoBlob } from "@/utils/video";
+import { validateVideoBlob, compressVideoBlob } from "@/utils/video";
 import { apiService } from "@/services/api";
 
 export default function RecordPage() {
@@ -25,7 +22,6 @@ export default function RecordPage() {
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "compressing" | "success">("idle");
   const [cameraActive, setCameraActive] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   const MAX_DURATION = 30000; // 30 seconds in ms
   const durationInterval = useRef<NodeJS.Timeout | null>(null);

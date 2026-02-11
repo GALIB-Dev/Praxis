@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 
 export default function SkillsPage() {
   const router = useRouter();
-  const [skills, setSkills] = useState([
+  const [skills] = useState([
     {
       name: "JavaScript",
       confidence: 92,
@@ -57,13 +57,6 @@ export default function SkillsPage() {
       router.push("/record");
     }
   }, [router]);
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return "bg-green-500";
-    if (confidence >= 80) return "bg-[#3A7D44]500";
-    if (confidence >= 70) return "bg-yellow-500";
-    return "bg-orange-500";
-  };
 
   const categories = Array.from(new Set(skills.map((s) => s.category)));
   const overallScore = Math.round(skills.reduce((acc, s) => acc + s.confidence, 0) / skills.length);

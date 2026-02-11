@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/Input";
-import { Alert } from "@/components/ui/Alert";
 import { Icon } from "@/components/Icon";
 
 const ADMIN_PHONE = "01785904899";
