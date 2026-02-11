@@ -18,19 +18,19 @@ export function Button({
   className = "",
   ...props
 }: ButtonProps) {
-  const baseClass = "font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 ease-smooth";
+  const baseClass = "font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-sm transition-all duration-300 ease-smooth";
 
   const variantClass = {
-    primary: "bg-black text-white hover:bg-gray-900 active:bg-black focus:ring-black disabled:bg-gray-300 disabled:text-gray-600",
-    secondary: "bg-gray-800 text-white hover:bg-gray-900 active:bg-black focus:ring-gray-800 disabled:bg-gray-400 disabled:text-gray-600",
-    outline: "border-2 border-black text-black hover:bg-black hover:text-white active:bg-gray-900 focus:ring-black disabled:border-gray-400 disabled:text-gray-400",
-    danger: "bg-gray-900 text-white hover:bg-black active:bg-gray-950 focus:ring-gray-900 disabled:bg-gray-300 disabled:text-gray-600",
+    primary: "bg-gradient-to-r from-primary to-indigo-400 text-white hover:from-primary/90 hover:to-indigo-400/90 active:from-primary active:to-indigo-400 focus:ring-primary disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500",
+    secondary: "bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 focus:ring-slate-200 disabled:text-slate-400",
+    outline: "border border-primary text-primary hover:bg-primary/10 hover:text-primary active:bg-primary/20 focus:ring-primary disabled:border-slate-300 disabled:text-slate-400",
+    danger: "bg-gradient-to-r from-rose-600 to-red-500 text-white hover:from-rose-500 hover:to-red-400 active:from-rose-700 active:to-red-600 focus:ring-rose-500 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500",
   }[variant];
 
   const sizeClass = {
-    sm: "text-sm px-3 py-1.5",
+    sm: "text-sm px-4 py-2",
     md: "text-base px-5 py-2.5",
-    lg: "text-lg px-7 py-3.5",
+    lg: "text-lg px-7 py-3",
   }[size];
 
   return (

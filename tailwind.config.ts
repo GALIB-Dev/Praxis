@@ -9,15 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#000000",
-        secondary: "#1a1a1a",
-        accent: "#ffffff",
-        dark: "#0a0a0a",
-        light: "#f8f8f8",
+        primary: "#3A7D44", // forest green
+        secondary: "#A3B18A", // soft sage
+        accent: "#F7F9F4", // light cream
+        dark: "#344E41", // dark text
+        light: "#F7F9F4", // cream background
         bengalRed: "#C62828",
         mustard: "#FFC857",
         indigo: "#1E3A8A",
-        offwhite: "#FFF8E1",
+        offwhite: "#F7F9F4",
         gray: {
           50: "#fafafa",
           100: "#f5f5f5",

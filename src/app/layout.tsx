@@ -3,9 +3,9 @@ import { AppProvider } from "@/context/AppContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SkillsMatcher - Job Matching Platform",
+  title: "Praxis - Video Skill Verification",
   description:
-    "Connect workers with job opportunities by matching skills extracted from videos and images.",
+    "30-second video to verified skills and job matches.",
 };
 
 export default function RootLayout({
@@ -16,7 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning>
-        <AppProvider>{children}</AppProvider>
+        <AppProvider>
+          <div className="min-h-screen relative">
+            {children}
+          </div>
+        </AppProvider>
       </body>
     </html>
   );

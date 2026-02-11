@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Bengali fonts and typography */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
 
 * {
@@ -15,26 +13,53 @@ html {
 }
 
 body {
-  @apply bg-light text-dark;
-  font-family: 'Noto Sans Bengali', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  @apply text-[#344E41] bg-[#F7F9F4];
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
-/* Bengali decorative pattern (alpana-inspired) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(58, 125, 68, 0.08), transparent 35%),
+    radial-gradient(circle at 85% 30%, rgba(163, 177, 138, 0.08), transparent 40%),
+    linear-gradient(180deg, #F7F9F4 0%, #F9FAF7 50%, #F7F9F4 100%);
+  pointer-events: none;
+}
+
+.app-shell {
+  background: transparent;
+}
+
+.sidebar-panel {
+  transform: translateX(-100%);
+  transition: transform 300ms ease;
+}
+
+body.sidebar-open .sidebar-panel {
+  transform: translateX(0);
+}
+
 @layer components {
   .bengali-alpana {
-    background-image: radial-gradient(circle at 10% 20%, rgba(198,40,40,0.06) 1px, transparent 1px),
-                      radial-gradient(circle at 80% 80%, rgba(255,200,87,0.04) 1px, transparent 1px);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08) 1px, transparent 1px),
+      radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.06) 1px, transparent 1px);
     background-size: 80px 80px, 100px 100px;
   }
 
   .bengali-hero {
-    background-color: #FFF8E1; /* offwhite */
-    color: #111827;
+    background-color: #F8FAFC;
+    color: #0F172A;
   }
 }
 
 a {
-  @apply text-primary hover:underline transition-colors;
+  @apply text-primary transition-colors;
 }
 
 button {
@@ -45,34 +70,34 @@ button {
 @layer components {
   .grid-dots {
     background-image: 
-      radial-gradient(circle, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+      radial-gradient(circle, rgba(79, 70, 229, 0.12) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
   .grid-dots-sm {
     background-image: 
-      radial-gradient(circle, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+      radial-gradient(circle, rgba(20, 184, 166, 0.10) 1px, transparent 1px);
     background-size: 30px 30px;
   }
 
   .grid-lines {
     background-image: 
-      linear-gradient(0deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+      linear-gradient(0deg, rgba(79, 70, 229, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 184, 166, 0.08) 1px, transparent 1px);
     background-size: 50px 50px;
   }
 
   .grid-lines-sm {
     background-image: 
-      linear-gradient(0deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      linear-gradient(0deg, rgba(79, 70, 229, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 184, 166, 0.06) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
   .grid-lines-lg {
     background-image: 
-      linear-gradient(0deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+      linear-gradient(0deg, rgba(79, 70, 229, 0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 184, 166, 0.10) 1px, transparent 1px);
     background-size: 60px 60px;
   }
 
@@ -82,16 +107,16 @@ button {
         45deg,
         transparent,
         transparent 40px,
-        rgba(0, 0, 0, 0.03) 40px,
-        rgba(0, 0, 0, 0.03) 80px
+        rgba(79, 70, 229, 0.05) 40px,
+        rgba(20, 184, 166, 0.05) 80px
       );
   }
 
   .grid-with-dots {
     background-image: 
-      linear-gradient(0deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-      radial-gradient(circle, rgba(0, 0, 0, 0.08) 2px, transparent 2px);
+      linear-gradient(0deg, rgba(79, 70, 229, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 184, 166, 0.06) 1px, transparent 1px),
+      radial-gradient(circle, rgba(79, 70, 229, 0.12) 2px, transparent 2px);
     background-size: 50px 50px, 50px 50px, 50px 50px;
   }
 

@@ -1,96 +1,126 @@
-import axios, { AxiosInstance } from "axios";
+// API service layer
+// Single source of truth for all backend communication
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
+import {
+  ProcessingResponse,
+  ProcessingStatusResponse,
+  SkillsResponse,
+  JobsResponse,
+} from "@/types/api";
 
-const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// Add authorization token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+class ApiService {
+  /**
+   * Upload video to backend
+   * POST /upload-video with multipart/form-data
+   */
+  async uploadVideo(videoBlob: Blob, userId: string): Promise<ProcessingResponse> {
+    try {
+      const formData = new FormData();
+      formData.append("video", videoBlob, "video.webm");
+      formData.append("user_id", userId);
 
-// Handle response errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      window.location.href = "/";
+      const response = await fetch(`${API_BASE_URL}/upload-video`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Upload failed");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw error;
     }
-    return Promise.reject(error);
   }
-);
 
-export const apiService = {
-  // Auth endpoints
-  login: (email: string, password: string) =>
-    api.post("/auth/login", { email, password }),
+  /**
+   * Poll processing status
+   * GET /processing-status?id=xxx
+   */
+  async getProcessingStatus(processingId: string): Promise<ProcessingStatusResponse> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/processing-status?id=${processingId}`,
+        {
+          method: "GET",
+        }
+      );
 
-  signup: (name: string, email: string, password: string, role: string) =>
-    api.post("/auth/signup", { name, email, password, role }),
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Status check failed");
+      }
 
-  // Upload endpoints
-  uploadVideo: (file: File, userId: string) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("userId", userId);
-    return api.post("/upload/video", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
+      return await response.json();
+    } catch (error) {
+      console.error("Status check error:", error);
+      throw error;
+    }
+  }
 
-  uploadImage: (file: File, userId: string) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("userId", userId);
-    return api.post("/upload/image", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
+  /**
+   * Get verified skills
+   * GET /skills?id=xxx
+   */
+  async getSkills(processingId: string): Promise<SkillsResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/skills?id=${processingId}`, {
+        method: "GET",
+      });
 
-  // Skill extraction endpoints
-  extractSkills: (contentId: string) =>
-    api.post("/skills/extract", { contentId }),
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Skills fetch failed");
+      }
 
-  getExtractedSkills: (userId: string) =>
-    api.get(`/skills/${userId}`),
+      return await response.json();
+    } catch (error) {
+      console.error("Skills fetch error:", error);
+      throw error;
+    }
+  }
 
-  // Job matching endpoints
-  getJobMatches: (userId: string) =>
-    api.get(`/jobs/matches/${userId}`),
+  /**
+   * Get matched jobs
+   * GET /jobs?id=xxx
+   */
+  async getJobs(processingId: string): Promise<JobsResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs?id=${processingId}`, {
+        method: "GET",
+      });
 
-  getJobDetails: (jobId: string) =>
-    api.get(`/jobs/${jobId}`),
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Jobs fetch failed");
+      }
 
-  // Employer endpoints
-  getCandidates: (employerId: string) =>
-    api.get(`/employer/candidates/${employerId}`),
+      return await response.json();
+    } catch (error) {
+      console.error("Jobs fetch error:", error);
+      throw error;
+    }
+  }
 
-  getCandidateProfile: (candidateId: string) =>
-    api.get(`/employer/candidate/${candidateId}`),
+  /**
+   * Health check endpoint
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`, {
+        method: "GET",
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+}
 
-  postJob: (employerId: string, jobData: any) =>
-    api.post(`/employer/jobs/${employerId}`, jobData),
 
-  getEmployerJobs: (employerId: string) =>
-    api.get(`/employer/jobs/${employerId}`),
-
-  // User endpoints
-  getUserProfile: (userId: string) =>
-    api.get(`/users/${userId}`),
-
-  updateUserProfile: (userId: string, data: any) =>
-    api.put(`/users/${userId}`, data),
-};
-
-export default api;
+export const apiService = new ApiService();

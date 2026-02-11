@@ -2,245 +2,459 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useApp } from "@/context/AppContext";
+import { Icon } from "@/components/Icon";
+import { BANGLA_TEXT } from "@/constants/bangla";
+import { formatDuration, validateVideoBlob, compressVideoBlob } from "@/utils/video";
 import { apiService } from "@/services/api";
-
-const MAX_DURATION_SECONDS = 30;
 
 export default function RecordPage() {
   const router = useRouter();
-  const { user } = useApp();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [permissionState, setPermissionState] = useState<"idle" | "granted" | "denied">("idle");
   const [isRecording, setIsRecording] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "compressing" | "success">("idle");
+  const [cameraActive, setCameraActive] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const MAX_DURATION = 30000; // 30 seconds in ms
+  const durationInterval = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * Initialize camera access
+   */
+  const initCamera = async () => {
+    try {
+      setError(null);
+      
+      // Check if navigator.mediaDevices exists (client-side only)
+      if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError("Camera API not available. Try a different browser.");
+        setCameraActive(false);
+        return;
+      }
+      
+      // Try with minimal constraints first
+      const constraints = {
+        video: {
+          facingMode: "user",
+        },
+        audio: true,
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraActive(true);
+    } catch (err: any) {
+      console.error("Camera error:", err.name, err.message);
+      
+      let errorMsg = "Unable to access camera. Check permissions.";
+      
+      if (err.name === "NotAllowedError") {
+        errorMsg = "Camera permission denied. Go to Settings > Permissions and allow camera access, then refresh.";
+      } else if (err.name === "NotFoundError") {
+        errorMsg = "No camera found on this device.";
+      } else if (err.name === "NotReadableError") {
+        errorMsg = "Camera is in use by another app. Close other apps and try again.";
+      } else if (err.name === "OverconstrainedError") {
+        errorMsg = "Camera constraints not supported on this device.";
+      } else if (err.name === "TypeError") {
+        errorMsg = "Camera API not available. Try Chrome or Firefox.";
+      }
+      
+      setError(errorMsg);
+      setCameraActive(false);
+    }
+  };
 
   useEffect(() => {
-    if (!user.id) {
+    // Ensure this only runs on client
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const id = localStorage.getItem("userId");
+    if (!id) {
       router.push("/login");
       return;
     }
+    setUserId(id);
 
-    requestCamera();
-  }, [user.id]);
+    // Auto-initialize camera on desktop only (larger screens)
+    if (window.innerWidth >= 768) {
+      initCamera();
+    }
 
-  useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-      if (recordedUrl) {
-        URL.revokeObjectURL(recordedUrl);
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach((track) => track.stop());
       }
     };
-  }, [stream, recordedUrl]);
+  }, [router]);
 
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
+  /**
+   * Start recording
+   */
+  const startRecording = async () => {
+    if (!videoRef.current?.srcObject) return;
 
-  const requestCamera = async () => {
-    setError(null);
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      setStream(mediaStream);
-      setPermissionState("granted");
-    } catch (err) {
-      setPermissionState("denied");
-      setError("ক্যামেরা পারমিশন পাওয়া যায়নি। ব্রাউজারের পারমিশন অন করুন।");
-    }
-  };
+      chunksRef.current = [];
+      const stream = videoRef.current.srcObject as MediaStream;
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+        ? "video/webm;codecs=vp8,opus"
+        : "video/webm";
 
-  const startRecording = () => {
-    if (!stream) return;
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
 
-    setError(null);
-    setElapsed(0);
-    chunksRef.current = [];
-
-    const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-    recorderRef.current = recorder;
-
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunksRef.current.push(event.data);
-      }
-    };
-
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      setRecordedBlob(blob);
-      const url = URL.createObjectURL(blob);
-      setRecordedUrl(url);
-      setIsRecording(false);
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
-    };
-
-    recorder.start();
-    setIsRecording(true);
-
-    timerRef.current = setInterval(() => {
-      setElapsed((prev) => {
-        if (prev + 1 >= MAX_DURATION_SECONDS) {
-          stopRecording();
-          return MAX_DURATION_SECONDS;
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
         }
-        return prev + 1;
-      });
-    }, 1000);
+      };
 
-    stopTimeoutRef.current = setTimeout(() => {
-      stopRecording();
-    }, MAX_DURATION_SECONDS * 1000);
-  };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        setRecordedBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setRecordedUrl(url);
+      };
 
-  const stopRecording = () => {
-    if (recorderRef.current && recorderRef.current.state !== "inactive") {
-      recorderRef.current.stop();
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+      setDuration(0);
+
+      // Timer
+      durationInterval.current = setInterval(() => {
+        setDuration((prev) => {
+          const newDuration = prev + 100;
+          if (newDuration >= MAX_DURATION) {
+            if (mediaRecorderRef.current && isRecording) {
+              mediaRecorderRef.current.stop();
+              setIsRecording(false);
+            }
+            if (durationInterval.current) {
+              clearInterval(durationInterval.current);
+            }
+            return MAX_DURATION;
+          }
+          return newDuration;
+        });
+      }, 100);
+
+      setError(null);
+    } catch (err) {
+      setError("রেকর্ডিং শুরু করতে সমস্যা হয়েছে");
     }
   };
 
+  /**
+   * Stop recording
+   */
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+
+      if (durationInterval.current) {
+        clearInterval(durationInterval.current);
+      }
+    }
+  };
+
+  /**
+   * Retake video
+   */
   const handleRetake = () => {
     setRecordedBlob(null);
-    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedUrl(null);
-    setElapsed(0);
+    setDuration(0);
+    if (recordedUrl) {
+      URL.revokeObjectURL(recordedUrl);
+    }
   };
 
+  /**
+   * Upload video
+   */
   const handleUpload = async () => {
-    if (!recordedBlob || !user.id) {
-      setError("আগে ভিডিও রেকর্ড করুন।");
+    if (!recordedBlob || !userId) {
+      setError("ভিডিও পাওয়া যায়নি");
       return;
     }
 
-    setIsUploading(true);
-    setError(null);
-
     try {
-      const file = new File([recordedBlob], "skill-video.webm", { type: "video/webm" });
-      const response = await apiService.uploadVideo(file, user.id);
+      setLoading(true);
+      setError(null);
+      setUploadProgress(0);
+      setUploadStatus("compressing");
 
-      const contentId =
-        response?.data?.contentId ||
-        response?.data?.id ||
-        response?.data?.content?.id ||
-        null;
-
-      if (contentId) {
-        localStorage.setItem("lastContentId", contentId);
+      // Validate
+      const validation = validateVideoBlob(recordedBlob);
+      if (!validation.valid) {
+        setError(validation.error || "ভিডিও বৈধ নয়");
+        setUploadStatus("idle");
+        return;
       }
-      localStorage.setItem("lastUploadResponse", JSON.stringify(response?.data || {}));
 
-      router.push("/processing");
+      // Compress (0-40% progress)
+      setUploadProgress(10);
+      const compressedBlob = await compressVideoBlob(recordedBlob);
+      setUploadProgress(40);
+
+      // Upload (40-90% progress)
+      setUploadStatus("uploading");
+      setUploadProgress(50);
+      
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          const next = prev + Math.random() * 20;
+          return next > 85 ? 85 : next;
+        });
+      }, 500);
+
+      const response = await apiService.uploadVideo(compressedBlob, userId);
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setUploadStatus("success");
+
+      if (response.processing_id) {
+        localStorage.setItem("processingId", response.processing_id);
+        
+        // Show success for 1.5s then redirect
+        setTimeout(() => {
+          router.push("/processing");
+        }, 1500);
+      }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || "ভিডিও আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";
-      setError(errorMsg);
+      setError(err.message || "আপলোড ব্যর্থ হয়েছে");
+      setUploadStatus("idle");
+      setUploadProgress(0);
     } finally {
-      setIsUploading(false);
+      setLoading(false);
     }
   };
 
-  if (!user.id) {
+  if (!userId) {
     return (
-      <>
-        <Header />
-        <main className="flex-1 flex items-center justify-center py-12">
-          <LoadingSpinner fullScreen />
-        </main>
-        <Footer />
-      </>
+      <div className="min-h-screen bg-[#F7F9F4] flex items-center justify-center px-4">
+        <p className="text-[#344E41]/6000">Loading...</p>
+      </div>
     );
   }
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 bg-light py-12 grid-lines-sm">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-8 border border-gray-300">
-            <h1 className="text-3xl font-bold mb-2">ভিডিও রেকর্ড করুন</h1>
-            <p className="text-gray-600 mb-6">
-              ৩০ সেকেন্ডের মধ্যে আপনার দক্ষতার একটি ছোট ভিডিও রেকর্ড করুন।
-            </p>
+    <div className="min-h-screen bg-[#F7F9F4] overflow-hidden relative px-4 py-3">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#A3B18A]/10 rounded-full blur-3xl animate-pulse" style={{ animation: "float 6s ease-in-out infinite" }} />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#3A7D44]/5 rounded-full blur-3xl animate-pulse" style={{ animation: "float 8s ease-in-out infinite 1s" }} />
+      </div>
 
-            {error && <Alert type="error" message={error} />}
+      {/* Grid background pattern */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+        backgroundImage: "linear-gradient(0deg, transparent 24%, rgba(58, 125, 68, 0.05) 25%, rgba(58, 125, 68, 0.05) 26%, transparent 27%, transparent 74%, rgba(58, 125, 68, 0.05) 75%, rgba(58, 125, 68, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(58, 125, 68, 0.05) 25%, rgba(58, 125, 68, 0.05) 26%, transparent 27%, transparent 74%, rgba(58, 125, 68, 0.05) 75%, rgba(58, 125, 68, 0.05) 76%, transparent 77%, transparent)",
+        backgroundSize: "50px 50px"
+      }} />
 
-            {permissionState === "denied" && (
-              <div className="mb-6">
-                <Button variant="secondary" onClick={requestCamera}>
-                  আবার চেষ্টা করুন
-                </Button>
-              </div>
-            )}
+      <div className="relative max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-4">
+          <button
+            onClick={() => router.back()}
+            className="text-[#3A7D44]00 hover:text-[#3A7D44]00 font-semibold mb-3 text-sm"
+          >
+            ← Back
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            Record Video
+          </h1>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-black rounded-lg overflow-hidden">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-72 object-cover"
-                />
-              </div>
-              <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                {recordedUrl ? (
-                  <video src={recordedUrl} controls className="w-full h-72 object-cover" />
-                ) : (
-                  <p className="text-gray-700">রেকর্ড করা ভিডিও এখানে দেখা যাবে</p>
-                )}
-              </div>
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-4 bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+            <div className="flex gap-3 mb-2">
+              <Icon name="warning-circle-svgrepo-com" size={20} color="#EF4444" className="flex-shrink-0" />
+              <p className="text-red-300 text-sm font-semibold">{error}</p>
             </div>
-
-            <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
-              <div className="text-sm text-gray-700">
-                সময়: {elapsed}s / {MAX_DURATION_SECONDS}s
-              </div>
-              <div className="flex gap-3 flex-wrap">
-                {!isRecording ? (
-                  <Button onClick={startRecording} disabled={!stream || !!recordedBlob}>
-                    রেকর্ড শুরু
-                  </Button>
-                ) : (
-                  <Button variant="secondary" onClick={stopRecording}>
-                    রেকর্ড বন্ধ
-                  </Button>
-                )}
-                <Button variant="outline" onClick={handleRetake} disabled={!recordedBlob || isRecording}>
-                  রিটেক
-                </Button>
-                <Button onClick={handleUpload} isLoading={isUploading} disabled={!recordedBlob || isRecording}>
-                  ভিডিও আপলোড
-                </Button>
-              </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => initCamera()}
+                className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-semibold"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => setError(null)}
+                className="text-xs px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded font-semibold border border-red-500/50"
+              >
+                Dismiss
+              </button>
             </div>
           </div>
+        )}
+
+        {/* Mobile Camera Button */}
+        {!cameraActive && typeof window !== "undefined" && window.innerWidth < 768 && (
+          <button
+            onClick={() => {
+              setError(null);
+              initCamera();
+            }}
+            className="w-full mb-4 px-6 py-4 bg-gradient-to-r from-[#3A7D44] to-[#2D5F34] hover:from-[#2D5F34] hover:to-[#25492A] text-white font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <Icon name="earth-svgrepo-com" size={20} color="white" />
+            Enable Camera
+          </button>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white/50 backdrop-blur-xl border border-[#A3B18A]00/50 space-y-4 rounded-xl p-4">
+          {/* Video */}
+          <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center">
+            {!cameraActive && (
+              <p className="text-white text-sm">Camera not active</p>
+            )}
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+
+          {/* Timer */}
+          <div className="text-center py-4 bg-[#A3B18A]/10 border border-[#A3B18A]00/50 rounded-lg">
+            <p className="text-4xl font-bold text-[#3A7D44]00">
+              {Math.floor(duration / 1000)}
+            </p>
+            <p className="text-xs text-[#344E41]/6000 mt-1">seconds / 30 max</p>
+          </div>
+
+          {/* Controls */}
+          <div className="space-y-2">
+            {!isRecording ? (
+              <button
+                onClick={startRecording}
+                disabled={!cameraActive || !!recordedBlob || loading}
+                className="w-full px-6 py-3 bg-gradient-to-r from-[#3A7D44] to-[#2D5F34] hover:from-[#2D5F34] hover:to-[#25492A] disabled:from-slate-500 disabled:to-slate-500 text-white font-bold rounded-xl transition-all"
+              >
+                Start
+              </button>
+            ) : (
+              <button
+                onClick={stopRecording}
+                disabled={loading}
+                className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl transition-all"
+              >
+                Stop
+              </button>
+            )}
+
+            {recordedBlob && (
+              <>
+                {/* Upload Progress */}
+                {uploadStatus !== "idle" && (
+                  <div className="space-y-3 p-4 bg-white/50 border border-[#A3B18A]00/50 rounded-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      {uploadStatus === "success" ? (
+                        <>
+                          <Icon name="check-circle-svgrepo-com" size={24} color="#16A34A" />
+                          <span className="font-semibold text-green-700">Upload Complete!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 animate-spin text-[#3A7D44]600" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          <span className="font-semibold text-slate-700">
+                            {uploadStatus === "compressing" ? "Compressing..." : "Uploading..."}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          uploadStatus === "success" ? "bg-green-500" : "bg-[#3A7D44]500"
+                        }`}
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    
+                    {/* Progress Text */}
+                    <div className="flex justify-between items-center text-xs text-slate-600">
+                      <span>{uploadStatus === "compressing" ? "Optimizing video..." : "Transferring..."}</span>
+                      <span className="font-semibold">{Math.round(uploadProgress)}%</span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleRetake}
+                  disabled={isRecording || loading}
+                  className="w-full px-6 py-3 bg-slate-200 hover:bg-slate-300 disabled:bg-slate-100 text-slate-900 font-semibold rounded-lg transition-colors"
+                >
+                  Retake
+                </button>
+
+                <button
+                  onClick={handleUpload}
+                  disabled={isRecording || loading}
+                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {loading && uploadStatus === "idle" ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Preparing...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="upload-svgrepo-com" size={18} color="white" />
+                      Upload
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Preview */}
+          {recordedUrl && (
+            <div className="bg-slate-100 rounded-lg overflow-hidden aspect-video">
+              <video
+                src={recordedUrl}
+                controls
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          )}
         </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+    </div>
   );
 }
