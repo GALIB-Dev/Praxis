@@ -275,54 +275,6 @@ export default function StartPage() {
             </div>
           </div>
 
-          {/* Why Choose Praxis */}
-          <div className="grid md:grid-cols-3 gap-4 mt-14 pt-8 border-t border-[#A3B18A]00/50">
-            {[
-              {
-                icon: "check-circle-svgrepo-com",
-                title: "Verified Skills",
-                desc: "Praxis captures your craft, your process, and the measurable change you create on the job&mdash;whether you weld, style hair, diagnose engines, or coordinate logistics. Share context once and reuse the same trusted proof whenever you apply for training, funding, or full-time work.",
-                color: "#10B981",
-                accent: "from-[#3A7D44] to-[#A3B18A]"
-              },
-              {
-                icon: "accelerate-svgrepo-com",
-                title: "Instant Results",
-                desc: "Every interaction is built to reduce friction, capture authentic narratives, and convert them into employer-ready evidence.",
-                color: "#F59E0B",
-                accent: "from-[#F59E0B] to-[#FACC15]"
-              },
-              {
-                icon: "trophy-svgrepo-com",
-                title: "Land Jobs",
-                desc: "Praxis amplifies lived experience.",
-                color: "#8B5CF6",
-                accent: "from-[#8B5CF6] to-[#C084FC]"
-              }
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="group relative overflow-hidden rounded-2xl border border-[#A3B18A]/40 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-5 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col aspect-square"
-              >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-white/0 via-[#3A7D44]/5 to-[#3A7D44]/20 transition-opacity" />
-                <div className="relative flex items-center justify-between text-xs font-semibold tracking-[0.3em] text-[#3A7D44]/60 dark:text-[#A3B18A]/70">
-                  <span>0{i + 1}</span>
-                  <span>Benefit</span>
-                </div>
-                <div className="relative flex-1 flex flex-col items-center justify-center gap-4 text-center">
-                  <div className="p-3 rounded-2xl bg-[#3A7D44]/10 dark:bg-[#A3B18A]/10">
-                    <Icon name={item.icon} size={28} color={item.color} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#344E41] dark:text-gray-100">{item.title}</h3>
-                    <p className="text-sm text-[#344E41]/80 dark:text-gray-300 mt-2 leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-                <div className={`relative mt-3 h-1.5 rounded-full bg-gradient-to-r ${item.accent}`} />
-              </div>
-            ))}
-          </div>
-
           {/* Narrative Content Sections */}
           <div className="mt-16 space-y-16">
             {/* How It Works */}
