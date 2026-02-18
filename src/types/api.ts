@@ -12,6 +12,10 @@ export interface GeminiAnalysis {
 export interface ProcessingResponse {
   processing_id: string;
   gemini_available: boolean;
+  status?: "done" | "failed";
+  analysis?: GeminiAnalysis;
+  skills?: Skill[];
+  jobs?: Job[];
   error?: string;
 }
 

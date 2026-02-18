@@ -24,7 +24,7 @@ export default function UploadPage() {
 
   const isVideo = mediaMode === "video";
   const acceptStr = isVideo ? "video/*" : "image/jpeg,image/png,image/webp,image/gif";
-  const maxSizeMB = isVideo ? 100 : 10;
+  const maxSizeMB = isVideo ? 5 : 4;
 
   const switchMode = (mode: MediaMode) => {
     setMediaMode(mode);
@@ -88,6 +88,8 @@ export default function UploadPage() {
         });
       }, 400);
 
+      setUploadStatus("analysing");
+
       let response;
       if (isVideo) {
         response = await apiService.uploadVideo(selectedFile, userId);
@@ -97,35 +99,28 @@ export default function UploadPage() {
 
       clearInterval(progressInterval);
       setUploadProgress(90);
-      setUploadStatus("analysing");
       setGeminiAvailable(response.gemini_available);
 
+      // Save processing ID for downstream pages
       if (response.processing_id) {
         localStorage.setItem("processingId", response.processing_id);
-
-        let attempts = 0;
-        const maxAttempts = 30;
-        const poll = setInterval(async () => {
-          attempts++;
-          try {
-            const status = await apiService.getProcessingStatus(response.processing_id);
-            if (status.status === "done") {
-              clearInterval(poll);
-              setUploadProgress(100);
-              setUploadStatus("success");
-              if (status.analysis) setAnalysis(status.analysis);
-              setTimeout(() => router.push("/processing"), 3000);
-            } else if (status.status === "failed" || attempts >= maxAttempts) {
-              clearInterval(poll);
-              setError("Processing failed. Please try again.");
-              setUploadStatus("idle");
-              setUploadProgress(0);
-            }
-          } catch {
-            clearInterval(poll);
-          }
-        }, 1500);
       }
+
+      // Data is returned inline — no polling needed (serverless-safe)
+      if (response.analysis) {
+        setAnalysis(response.analysis);
+        localStorage.setItem("geminiAnalysis", JSON.stringify(response.analysis));
+      }
+      if (response.skills) {
+        localStorage.setItem("geminiSkills", JSON.stringify(response.skills));
+      }
+      if (response.jobs) {
+        localStorage.setItem("geminiJobs", JSON.stringify(response.jobs));
+      }
+
+      setUploadProgress(100);
+      setUploadStatus("success");
+      setTimeout(() => router.push("/processing"), 3000);
     } catch (err: any) {
       setError(err.message || "Upload failed");
       setUploadStatus("idle");
@@ -253,7 +248,7 @@ export default function UploadPage() {
                 {isVideo ? "Drop video here or click to browse" : "Drop image here or click to browse"}
               </h3>
               <p className="text-sm text-[#344E41]/60 dark:text-gray-400 mb-1">
-                {isVideo ? "MP4, WebM, MOV, AVI — max 100 MB" : "JPG, PNG, WebP, GIF — max 10 MB"}
+                {isVideo ? "MP4, WebM, MOV, AVI — max 5 MB" : "JPG, PNG, WebP, GIF — max 4 MB"}
               </p>
               <p className="text-xs text-[#3A7D44] dark:text-[#A3B18A] font-medium">
                 ✦ Gemini AI will analyse your {isVideo ? "video" : "image"} automatically

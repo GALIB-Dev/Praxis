@@ -59,6 +59,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       processing_id: processingId,
       gemini_available: !!geminiKey,
+      status: "done",
+      analysis: store.analysis[processingId] ?? null,
+      skills: store.skills[processingId] ?? [],
+      jobs: store.jobs[processingId] ?? [],
     });
   } catch (err: any) {
     return NextResponse.json({ detail: err.message }, { status: 500 });
