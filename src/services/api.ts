@@ -8,8 +8,6 @@ import {
   JobsResponse,
 } from "@/types/api";
 
-const API_BASE_URL = "";
-
 class ApiService {
   /**
    * Upload video to backend → Gemini extracts skills + transcript
